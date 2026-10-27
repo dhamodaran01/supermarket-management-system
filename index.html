@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- CMD STEP 03-06: Page metadata and browser-tab title -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supermarket Management System</title>
+
+  <!-- CMD STEP 07: Connect the CSS file that styles this page -->
+  <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body class="auth-body">
+  <!-- CMD STEP 08-09: Main page and login-card containers -->
+  <div class="auth-card">
+
+    <!-- CMD STEP 10: Show the SuperMart logo image -->
+    <div class="brand login-brand">
+      <img class="login-logo"
+           src="assets/supermart-logo.png"
+           alt="SuperMart logo">
+    </div>
+
+    <!-- CMD STEP 11: Login/Register buttons call functions in js/auth.js -->
+    <div class="tabs">
+      <button type="button" class="tab active"
+              onclick="switchAuth('login')">Login</button>
+      <button type="button" class="tab"
+              onclick="switchAuth('register')">Register</button>
+    </div>
+
+    <!-- CMD STEP 12: Role buttons; JavaScript must respond to their clicks -->
+    <div class="role-switch">
+      <button type="button" class="role active" data-role="admin">Admin</button>
+      <button type="button" class="role" data-role="staff">Staff</button>
+    </div>
+
+    <!-- CMD STEP 13-16: Form, hidden state, input fields and feedback -->
+    <form id="authForm">
+      <input type="hidden" id="action" value="login">
+      <input type="hidden" id="role" value="admin">
+
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text"
+             autocomplete="username" required placeholder="Enter username">
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email"
+             autocomplete="email" required placeholder="Enter email">
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password"
+             autocomplete="current-password" required placeholder="Enter password">
+
+      <button class="primary" type="submit" id="authButton">Login as Admin</button>
+
+      <p id="authMessage" class="message" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- CMD STEP 17: Load JavaScript after the browser parses the HTML -->
+  <script src="js/local-storage.js" defer></script>
+  <script src="js/auth.js" defer></script>
+</body>
+</html>

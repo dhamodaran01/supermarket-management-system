@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SuperMart Dashboard</title>
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+<header class="topbar"><div class="brand small"><img src="assets/supermart-logo.png" alt="SuperMart logo"></div><div class="userbox"><span id="loggedUser">User</span><button onclick="logout()">Logout</button></div></header>
+<div class="layout">
+<aside class="sidebar">
+<a href="#dashboard" data-section="dashboard" onclick="showSection('dashboard');return false;" class="active">Dashboard</a>
+<a href="#products" data-section="products" onclick="showSection('products');return false;">Products</a>
+<a href="#stock" data-section="stock" onclick="showSection('stock');return false;">Stock</a>
+<a href="#suppliers" data-section="suppliers" onclick="showSection('suppliers');return false;">Suppliers</a>
+<a href="#customers" data-section="customers" onclick="showSection('customers');return false;">Customers</a>
+<a href="#sales" data-section="sales" onclick="showSection('sales');return false;">Sales / Billing</a>
+<a href="#payments" data-section="payments" onclick="showSection('payments');return false;">Payments</a>
+<a href="#reports" data-section="reports" onclick="showSection('reports');return false;">Reports</a>
+<a href="#staff" data-section="staff" onclick="showSection('staff');return false;" id="staffNav">Staff</a>
+<a href="#settings" data-section="settings" onclick="showSection('settings');return false;">Settings</a>
+<a href="#" onclick="logout();return false;" class="logout">Logout</a>
+</aside>
+<main>
+
+<!-- CMD STEP 08: Dashboard overview cards and quick-action buttons -->
+<section id="dashboard" class="dashboard-section active">
+<h1>Dashboard</h1><p class="welcome">Supermarket overview</p>
+<div class="cards">
+<div class="card"><div class="card-title">Products</div><div class="card-number" id="dashboardProducts">0</div><p>Total Products</p></div>
+<div class="card"><div class="card-title">Stock</div><div class="card-number" id="dashboardStock">0</div><p>Available Stock</p></div>
+<div class="card"><div class="card-title">Customers</div><div class="card-number" id="dashboardCustomers">0</div><p>Total Customers</p></div>
+<div class="card"><div class="card-title">Suppliers</div><div class="card-number" id="dashboardSuppliers">0</div><p>Total Suppliers</p></div>
+<div class="card"><div class="card-title">Low Stock</div><div class="card-number" id="dashboardLowStock">0</div><p>Products at or below 10 units</p></div>
+<div class="card"><div class="card-title">Out of Stock</div><div class="card-number" id="dashboardOutOfStock">0</div><p>Products with zero stock</p></div>
+<div class="card"><div class="card-title">Today's Sales</div><div class="card-number" id="dashboardTodaySales">0</div><p>Sales Transactions</p></div>
+<div class="card"><div class="card-title">Today's Revenue</div><div class="card-number" id="dashboardTodayRevenue">₹0.00</div><p>Total Revenue</p></div>
+<button class="card dashboard-report-card quick-admin" type="button" onclick="openDashboardReportFeature('salesRevenue')">
+<div class="card-title">Sales &amp; Revenue Reports</div>
+<div class="card-number">↗</div>
+<p>Daily, Weekly &amp; Yearly Reports</p>
+</button>
+<button class="card dashboard-report-card quick-admin" type="button" onclick="openDashboardReportFeature('counterClose')">
+<div class="card-title">Counter Close</div>
+<div class="card-number">₹</div>
+<p>Staff Cash • UPI • Card Reconciliation</p>
+</button>
+</div>
+<div class="panel quick-panel"><h2>Quick Actions</h2><div class="quick-actions">
+<button class="primary quick-admin" id="quickAddProduct" onclick="showSection('products')">Add Product</button>
+<button class="primary" onclick="showSection('customers')">Add Customer</button>
+<button class="primary quick-admin" id="quickAddSupplier" onclick="showSection('suppliers')">Add Supplier</button>
+<button class="primary" onclick="showSection('sales')">Create Bill</button>
+</div></div>
+</section>
+
+<!-- CMD STEP 09: Product form, product search and product list table -->
+<section id="products" class="dashboard-section">
+<h1>Product Management</h1><p class="welcome">Add, view, edit and delete supermarket products</p>
+<div class="panel detail-box" id="productDetails"><b>Product Details</b><span>Select a product from the list to view details.</span></div>
+<div class="panel"><h2 id="productFormTitle">Add Product</h2><form id="productForm" class="grid-form">
+<input type="hidden" id="editProductId">
+<div class="form-field"><label>Category Type</label><input id="categoryType" required placeholder="Category Type"></div>
+<div class="form-field"><label>Product Name</label><input id="productName" required placeholder="Product Name"></div>
+<div class="form-field"><label>Variety</label><input id="variety" placeholder="Variety"></div>
+<div class="form-field"><label>Actual Price</label><input type="number" id="actualPrice" min="0" step=".01" required placeholder="0.00"></div>
+<div class="form-field"><label>Selling Price</label><input type="number" id="sellingPrice" min="0" step=".01" required placeholder="0.00"></div>
+<div class="form-field"><label>Opening Stock</label><input type="number" id="productStock" min="0" step=".01" value="0" required placeholder="0"></div>
+<div class="form-field"><label>Unit</label><select id="unit" required><option value="">Unit</option><option>Kg</option><option>Gram</option><option>Liter</option><option>Piece</option><option>Packet</option></select></div>
+<div class="form-field"><label>Supplier</label><select id="supplierId"><option value="">Supplier</option></select></div>
+<div class="form-field"><label>Supplier Cost</label><input type="number" id="supplierCost" min="0" step=".01" placeholder="0.00"></div>
+<div class="button-row"><button class="primary" type="submit" id="productSubmit">Add Product</button><button class="secondary" type="button" id="productCancel" onclick="resetProductForm()" style="display:none">Cancel Edit</button></div>
+</form></div>
+<div class="panel"><div class="list-header"><h2>Product List</h2><input id="searchProduct" placeholder="Search product, category, variety, supplier..." oninput="renderProducts()"></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Category</th><th>Product</th><th>Variety</th><th>Actual</th><th>Selling</th><th>Stock</th><th>Unit</th><th>Supplier</th><th>Supplier Cost</th><th>Actions</th></tr></thead><tbody id="productTable"></tbody></table></div></div>
+</section>
+
+<!-- CMD STEP 10: Stock update form and stock list table -->
+<section id="stock" class="dashboard-section">
+<h1>Stock Management</h1><p class="welcome">Add stock, set stock and edit the current quantity</p>
+<div class="panel detail-box" id="stockDetails"><b>Stock Details</b><span>Select a stock row to view current quantity and supplier information.</span></div>
+<div class="panel"><h2>Update Stock</h2><form id="stockForm" class="grid-form">
+<div class="form-field"><label>Product</label><select id="stockProductSelect" required></select></div>
+<div class="form-field"><label>Current Stock</label><input id="stockCurrentStock" readonly placeholder="Current Stock"></div>
+<div class="form-field"><label>Add Stock</label><input type="number" id="stockAddStock" min=".01" step=".01" placeholder="Quantity to add"></div>
+<div class="form-field"><label>New Stock</label><input id="stockNewStock" readonly placeholder="New Stock"></div>
+<div class="form-field"><label>Set Exact Stock</label><input type="number" id="stockSetStock" min="0" step=".01" placeholder="Optional exact value"></div>
+<div class="button-row"><button class="primary" type="submit">Update Stock</button><button class="secondary" type="button" onclick="clearStockForm()">Clear</button></div>
+</form></div>
+<div class="panel"><div class="list-header"><h2>Stock List</h2><input id="searchStock" placeholder="Search product, variety, supplier..." oninput="renderStock()"></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Product</th><th>Variety</th><th>Supplier</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="stockTable"></tbody></table></div></div>
+</section>
+
+<!-- CMD STEP 11: Supplier form, supplier list and cost comparison -->
+<section id="suppliers" class="dashboard-section">
+<h1>Supplier Management</h1><p class="welcome">Add, search, edit, delete and compare supplier costs</p>
+<div class="panel detail-box" id="supplierDetails"><b>Supplier Details</b><span>Select a supplier to view all supplier information.</span></div>
+<div class="panel"><h2 id="supplierFormTitle">Add Supplier</h2><form id="supplierForm" class="grid-form">
+<input type="hidden" id="editSupplierId">
+<div class="form-field"><label>Supplier ID / Code</label><input id="supplierCode" required placeholder="Supplier code"></div>
+<div class="form-field"><label>Supplier Name</label><input id="supplierNameForm" required placeholder="Supplier Name"></div>
+<div class="form-field"><label>Phone</label><input id="supplierPhone" placeholder="Phone"></div>
+<div class="form-field"><label>Email</label><input id="supplierEmail" type="email" placeholder="Email"></div>
+<div class="form-field"><label>Address</label><input id="supplierAddress" placeholder="Address"></div>
+<div class="form-field"><label>Product</label><input id="supplierProductName" placeholder="Product supplied"></div>
+<div class="form-field"><label>Variety</label><input id="supplierVariety" placeholder="Variety"></div>
+<div class="form-field"><label>Supplier Cost</label><input type="number" id="supplierCostForm" min="0" step=".01" placeholder="0.00"></div>
+<div class="form-field"><label>Unit</label><select id="supplierUnit"><option value="">Unit</option><option>Kg</option><option>Gram</option><option>Liter</option><option>Piece</option><option>Packet</option></select></div>
+<div class="button-row"><button class="primary" type="submit" id="supplierSubmit">Add Supplier</button><button class="secondary" type="button" id="supplierCancel" onclick="resetSupplierForm()" style="display:none">Cancel Edit</button></div>
+</form></div>
+<div class="panel"><div class="list-header"><h2>Supplier List</h2><input id="searchSupplier" placeholder="Search supplier, product, variety, phone..." oninput="renderSuppliers()"></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Product</th><th>Variety</th><th>Cost</th><th>Unit</th><th>Phone</th><th>Email</th><th>Actions</th></tr></thead><tbody id="supplierTable"></tbody></table></div></div>
+<div class="panel"><h2>Compare Supplier Cost</h2><div class="inline-form"><div class="form-field"><label>Product Name</label><input id="compareProduct" placeholder="Enter exact product name"></div><button class="primary" onclick="compareSupplierCost()">Compare Cost</button></div><div class="table-wrap"><table><thead><tr><th>Supplier</th><th>Code</th><th>Product</th><th>Variety</th><th>Supplier Cost</th><th>Unit</th></tr></thead><tbody id="compareTable"></tbody></table></div></div>
+</section>
+
+<!-- CMD STEP 12: Customer form, customer list and reward-points information -->
+<section id="customers" class="dashboard-section">
+<h1>Customer Management</h1><p class="welcome">Add, search, edit and delete customers</p>
+<div class="panel detail-box" id="customerDetails"><b>Customer Details</b><span>Select a customer to view ID, contact and reward points.</span></div>
+<div class="panel"><h2 id="customerFormTitle">Add Customer</h2><form id="customerForm" class="grid-form">
+<input type="hidden" id="editCustomerId">
+<div class="form-field"><label>Customer Name</label><input id="customerNameForm" required placeholder="Customer Name"></div>
+<div class="form-field"><label>Mobile Number</label><input id="customerMobileForm" required maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+<div class="form-field"><label>Email</label><input id="customerEmailForm" type="email" placeholder="Email"></div>
+<div class="form-field"><label>Address</label><input id="customerAddressForm" placeholder="Address"></div>
+<div class="button-row"><button class="primary" type="submit" id="customerSubmit">Add Customer</button><button class="secondary" type="button" id="customerCancel" onclick="resetCustomerForm()" style="display:none">Cancel Edit</button></div>
+</form></div>
+<div class="panel"><div class="list-header"><h2>Customer List</h2><input id="searchCustomer" placeholder="Search name, mobile, email, address..." oninput="renderCustomers()"></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Address</th><th>Points</th><th>Created By</th><th>Actions</th></tr></thead><tbody id="customerTable"></tbody></table></div></div>
+<div class="panel reward-info"><h2>Reward Points</h2><p><b>Earn:</b> 1 point for every ₹1,000 spent.</p><p><b>Redeem:</b> 1 point = ₹10 discount.</p><p><b>Minimum redemption:</b> 5 points.</p></div>
+</section>
+
+<!-- CMD STEP 13: Sales workflow — customer details, billing, discounts and payment steps -->
+<section id="sales" class="dashboard-section">
+<div class="sales-page-head">
+  <div>
+    <h1>Sales &amp; Billing</h1>
+    <p class="welcome">Customer, Billing &amp; Payment</p>
+  </div>
+  <div class="sales-date"><span>📅</span><b id="salesDateDisplay">--</b></div>
+</div>
+
+<div class="sales-flow-cards">
+  <button type="button" class="sales-flow-card" data-step="customer" onclick="showSalesSection('customer')">
+    <span class="sales-shortcut">Q</span><span><strong>Customer Details</strong><small>Customer information</small></span>
+  </button>
+  <button type="button" class="sales-flow-card" data-step="billing" onclick="showSalesSection('billing')">
+    <span class="sales-shortcut">W</span><span><strong>Billing</strong><small>Create customer invoice</small></span>
+  </button>
+  <button type="button" class="sales-flow-card" data-step="payment" onclick="showSalesSection('payment')">
+    <span class="sales-shortcut">E</span><span><strong>Payment</strong><small>Process payment</small></span>
+  </button>
+  <button type="button" class="sales-flow-card" data-step="menu" onclick="showSalesSection('menu')">
+    <span class="sales-shortcut">R</span><span><strong>Sales Menu</strong><small>Return to sales menu</small></span>
+  </button>
+</div>
+<div class="sales-shortcuts"><span><kbd>Q</kbd> Customer</span><span><kbd>W</kbd> Billing</span><span><kbd>E</kbd> Payment</span><span><kbd>R</kbd> Sales Menu</span></div>
+
+<div id="salesMenuStep" class="sales-step sales-menu-step">
+  <div class="panel sales-menu-panel">
+    <h2>Sales &amp; Billing</h2>
+    <p class="welcome">Choose an operation below.</p>
+    <div class="sales-menu-actions">
+      <button type="button" class="primary" onclick="showSalesSection('customer')">Q &nbsp; Customer Details</button>
+      <button type="button" class="primary" onclick="showSalesSection('billing')">W &nbsp; Billing</button>
+      <button type="button" class="primary" onclick="showSalesSection('payment')">E &nbsp; Payment</button>
+    </div>
+  </div>
+</div>
+
+<div id="salesCustomerStep" class="sales-step">
+  <div class="panel sales-customer-panel">
+    <div class="sales-section-heading"><div><h2>Customer Details</h2><p>Enter customer information or automatically fetch an existing customer.</p></div><span class="sales-key-badge">Q</span></div>
+    <div class="customer-workspace">
+      <div class="customer-entry-side">
+        <div class="grid-form sales-customer-inputs">
+          <div class="form-field"><label>Customer Mobile</label><div class="field-with-icon"><span>☎</span><input id="customerMobile" maxlength="10" inputmode="numeric" placeholder="Enter 10-digit mobile"></div></div>
+          <div class="form-field"><label>Invoice Number</label><div class="field-with-icon"><span>▣</span><input id="invoiceNumber" readonly></div></div>
+          <div class="form-field"><label>Bill Date</label><div class="field-with-icon"><span>▦</span><input type="date" id="billDate"></div></div>
+        </div>
+        <p id="customerSearchStatus" class="small-note customer-search-status">Customer details will be searched automatically after 10 digits are entered.</p>
+      </div>
+      <div class="customer-info-layout">
+        <div class="customer-info-card" id="billingCustomerDetails">
+          <div class="customer-info-title"><span>▤</span><h3>Customer Information</h3></div>
+          <div id="customerResult"><span class="muted">Enter a valid mobile number to fetch customer details from MySQL.</span></div>
+          <button class="secondary" id="addCustomerFromBill" onclick="showSection('customers')" style="display:none">+ Add Customer</button>
+        </div>
+      </div>
+    </div>
+    <div class="sales-step-actions"><button class="primary" type="button" onclick="showSalesSection('billing')">Continue to Billing →</button></div>
+  </div>
+</div>
+
+<div id="salesBillingStep" class="sales-step">
+  <div class="panel">
+    <div class="sales-section-heading"><div><h2>Create Bill</h2><p>Add products to the invoice and review the total.</p></div><span class="sales-key-badge">W</span></div>
+    <div class="grid-form sales-product-entry">
+      <div class="form-field billing-product-search-field"><label for="productSearchInput">Product</label><div class="billing-product-search-wrap"><input type="text" id="productSearchInput" placeholder="Search product by name..." autocomplete="off" aria-label="Search product by name" aria-controls="productSearchResults" aria-expanded="false"><div id="productSearchResults" class="billing-product-search-results" role="listbox" hidden></div></div><select id="productSelect" class="billing-product-select-hidden" aria-hidden="true" tabindex="-1"><option value="">Select Product</option></select></div>
+      <div class="form-field"><label>Quantity</label><input type="number" id="productQuantity" min="0.01" step="0.01" value="1"></div>
+      <div class="form-field"><label>Selling Price</label><input id="productPrice" readonly placeholder="₹0.00"></div>
+    </div>
+    <div class="button-row sales-product-actions"><button class="primary" type="button" onclick="addBillItem()">+ Add Product</button><button class="secondary" type="button" onclick="clearBill()">Clear Bill</button></div>
+
+    <div class="sales-subheading"><h3>Added Products</h3></div>
+    <div class="table-wrap sales-bill-table-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Variety</th><th>Price</th><th>Qty</th><th>Unit</th><th>Total</th><th>Action</th></tr></thead><tbody id="billTable"><tr><td colspan="8">No products added to the bill.</td></tr></tbody></table></div>
+
+    <div class="billing-bottom-grid">
+      <div class="discount-tax-box">
+        <div class="sales-subheading"><h3>Discounts &amp; Tax</h3></div>
+        <div class="grid-form discount-tax-grid">
+          <div class="form-field"><label>Reward Points to Redeem</label><input type="number" id="pointsToRedeem" min="0" step="1" value="0"></div>
+          <div class="form-field"><label>Other Discount (₹)</label><input type="number" id="otherDiscountInput" min="0" step=".01" value="0"></div>
+          <div class="form-field"><label>GST</label><input id="gstRate" value="5%" readonly></div>
+        </div>
+        <div class="small-note" id="rewardMessage">Available: 5 points | Discount: ₹0.00 | 1 point = ₹10.</div>
+      </div>
+
+      <div class="bill-summary-box">
+        <div class="sales-subheading"><h3>Bill Summary</h3></div>
+        <div class="summary-row"><span>🛒 Total Items</span><b id="totalItems">0</b></div>
+        <div class="summary-row"><span>🪙 Subtotal</span><b id="billSubtotal">₹0.00</b></div>
+        <div class="summary-row"><span>🎁 Loyalty Discount</span><b id="loyaltyDiscount">₹0.00</b></div>
+        <div class="summary-row"><span>🏷 Other Discount</span><b id="otherDiscount">₹0.00</b></div>
+        <div class="summary-row"><span>🧮 Taxable Amount</span><b id="taxableAmount">₹0.00</b></div>
+        <div class="summary-row"><span>% GST (5%)</span><b id="billTax">₹0.00</b></div>
+        <div class="summary-row"><span>⭐ Points After Sale</span><b id="pointsAfterSale">0</b></div>
+        <div class="grand-total-box"><span>GRAND TOTAL</span><b id="grandTotal">₹0.00</b></div>
+      </div>
+    </div>
+    <div class="sales-step-actions"><button class="primary" type="button" onclick="showSalesSection('payment')">Continue to Payment →</button></div>
+  </div>
+</div>
+
+<div id="salesPaymentStep" class="sales-step">
+  <div class="panel payment-page-panel">
+    <div class="sales-section-heading"><div><h2>Payment</h2><p>Process payment and complete the bill.</p></div><span class="sales-key-badge">E</span></div>
+    <div class="payment-page-grid">
+      <div class="payment-card">
+        <div class="payment-card-title"><span>💳</span><h3>Payment Method</h3></div>
+        <div class="payment-methods">
+          <button type="button" class="payment-tab active" data-method="CASH" onclick="selectPaymentMethod('CASH')">Cash</button>
+          <button type="button" class="payment-tab" data-method="UPI" onclick="selectPaymentMethod('UPI')">UPI</button>
+          <button type="button" class="payment-tab" data-method="CARD" onclick="selectPaymentMethod('CARD')">Card</button>
+        </div>
+        <input type="hidden" id="paymentMethod" value="CASH">
+        <div class="payment-total-strip"><span>Amount Payable</span><b id="paymentGrandTotal">₹0.00</b></div>
+        <div class="payment-fields" id="cashFields"><div class="form-field"><label>Amount Received</label><div class="compact-money-input"><span>₹</span><input type="number" id="cashReceived" min="0" step=".01" placeholder="0.00"></div></div><div class="cash-result cash-ok"><span id="cashResultLabel">Balance / Change:</span> <b id="cashChange">₹0.00</b></div></div>
+        <div class="payment-fields" id="upiFields" style="display:none"><div class="form-field compact-payment-field"><label>UPI ID</label><input id="upiId" placeholder="example@upi"></div></div>
+        <div class="payment-fields" id="cardFields" style="display:none"><div class="grid-form compact-card-grid"><div class="form-field"><label>Card Number</label><input id="cardNumber" maxlength="19" inputmode="numeric" placeholder="Card number"></div><div class="form-field"><label>Expiry Year</label><input id="cardYear" maxlength="4" inputmode="numeric" placeholder="YYYY"></div><div class="form-field"><label>CVV</label><input id="cardCvv" maxlength="4" inputmode="numeric" type="password" placeholder="CVV"></div></div></div>
+      </div>
+      <div class="payment-card payment-summary-card">
+        <div class="payment-card-title"><span>🧾</span><h3>Bill Summary</h3></div>
+        <div class="payment-summary-row"><span>🛒 Total Items</span><b id="paySummaryItems">0</b></div>
+        <div class="payment-summary-row"><span>🪙 Subtotal</span><b id="paySummarySubtotal">₹0.00</b></div>
+        <div class="payment-summary-row"><span>🎁 Loyalty Discount</span><b id="paySummaryLoyalty">₹0.00</b></div>
+        <div class="payment-summary-row"><span>🏷 Other Discount</span><b id="paySummaryOther">₹0.00</b></div>
+        <div class="payment-summary-row"><span>🧮 Taxable Amount</span><b id="paySummaryTaxable">₹0.00</b></div>
+        <div class="payment-summary-row"><span>% GST (5%)</span><b id="paySummaryTax">₹0.00</b></div>
+        <div class="payment-summary-row"><span>⭐ Points After Sale</span><b id="paySummaryPoints">0</b></div>
+        <div class="grand-total-box payment-grand-total"><span>GRAND TOTAL</span><b id="paySummaryGrandTotal">₹0.00</b></div>
+      </div>
+    </div>
+    <div class="staff-counter-lock-banner" id="staffCounterLockBanner" style="display:none">🔒 <b>Counter Closed</b><span>Open your counter from Reports → Counter Closing before creating another bill.</span><button type="button" class="secondary" onclick="showSection('reports')">Open Counter</button></div><div class="sales-step-actions payment-actions"><button class="primary" id="completeSaleButton" type="button" onclick="completeSale()">✓ Generate Bill &amp; Complete Payment</button></div>
+  </div>
+</div>
+
+<div id="invoiceModal" class="invoice-modal" aria-hidden="true">
+  <div class="invoice-modal-backdrop" onclick="closeInvoiceModal()"></div>
+  <div class="invoice-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="invoiceModalTitle">
+    <div class="invoice-modal-header"><div><h2 id="invoiceModalTitle">Bill / Invoice</h2><p>Payment completed successfully</p></div><button type="button" class="invoice-close" onclick="closeInvoiceModal()">×</button></div>
+    <div id="invoicePopupContent" class="invoice-popup-content"></div>
+    <div class="invoice-modal-actions"><button type="button" class="secondary" onclick="closeInvoiceModal()">Close</button><button type="button" class="secondary" onclick="downloadBill()">↓ Download Bill</button><button type="button" class="primary" onclick="printBill()">🖨 Print Bill</button></div>
+  </div>
+</div>
+</section>
+
+<!-- CMD STEP 14: Payment records and payment-related controls -->
+<section id="payments" class="dashboard-section">
+<h1>Payment Management</h1><p class="welcome">View payment history, cash received and remaining/change</p>
+<div class="cards payment-summary"><div class="card"><div class="card-title">Total Payments</div><div class="card-number" id="paymentCount">0</div></div><div class="card"><div class="card-title">Cash Collected</div><div class="card-number" id="cashCollected">₹0.00</div></div><div class="card"><div class="card-title">Total Change Given</div><div class="card-number" id="totalChange">₹0.00</div></div></div>
+<div class="panel detail-box" id="paymentDetails"><b>Payment Details</b><span>Select a payment row to view complete payment information.</span><button class="primary" id="printPaymentButton" onclick="printPaymentDetails()" style="display:none">Print / Download Payment</button></div>
+<div class="panel"><div class="list-header"><h2>Payment List</h2><input id="searchPayment" placeholder="Search payment, customer, method, staff..." oninput="renderPayments()"></div><div class="table-wrap"><table><thead><tr><th>Payment ID</th><th>Sale ID</th><th>Customer</th><th>Mobile</th><th>Amount</th><th>Method</th><th>Cash Received</th><th>Change / Remaining</th><th>Reference</th><th>Status</th><th>Date</th><th>Staff</th><th>Details</th></tr></thead><tbody id="paymentTable"></tbody></table></div></div>
+</section>
+
+<!-- CMD STEP 15: Reports, report-period controls, exports and counter closing -->
+<section id="reports" class="dashboard-section">
+<h1>Reports</h1>
+<p class="welcome" id="reportWelcome">Click any report card to view detailed information.</p>
+
+<div id="adminReports" class="report-role-panel">
+
+    <div class="cards report-cards">
+        <button class="card report-card" onclick="showReportCard('products')"><div class="card-title">Products</div><div class="card-number" id="reportProductsCount">0</div><p>Total Products</p></button>
+        <button class="card report-card" onclick="showReportCard('stock')"><div class="card-title">Stock</div><div class="card-number" id="reportStockValue">₹0.00</div><p>Available Stock Value</p></button>
+        <button class="card report-card" onclick="showReportCard('customers')"><div class="card-title">Customers</div><div class="card-number" id="reportCustomersCount">0</div><p>Total Customers</p></button>
+        <button class="card report-card" onclick="showReportCard('suppliers')"><div class="card-title">Suppliers</div><div class="card-number" id="reportSuppliersCount">0</div><p>Total Suppliers</p></button>
+        <button class="card report-card" onclick="showReportCard('sales')"><div class="card-title">Today's Sales</div><div class="card-number" id="reportSalesCount">0</div><p>Sales Transactions</p></button>
+        <button class="card report-card" onclick="showReportCard('revenue')"><div class="card-title">Today's Revenue</div><div class="card-number" id="reportRevenue">₹0.00</div><p>Total Revenue</p></button>
+        <button class="card report-card" onclick="showReportCard('staff')"><div class="card-title">Staff Reports</div><div class="card-number" id="reportStaffCount">0</div><p>Individual Staff Details</p></button>
+        <button class="card report-card" onclick="showReportCard('admins')"><div class="card-title">Admin Reports</div><div class="card-number" id="reportAdminCount">0</div><p>Individual Admin Details</p></button>
+
+    </div>
+
+    <div class="panel report-detail-panel" id="reportDetailPanel" style="display:none"><h2 id="reportDetailTitle">Report Details</h2><div id="reportDetailContent"><p class="muted">Click a report card above to open its details.</p></div></div>
+    <div class="cards admin-report-feature-cards">
+        <button class="card report-feature-card" type="button" onclick="openAdminReportFeature('salesRevenue')">
+            <div class="card-title">Sales & Revenue Reports</div>
+            <div class="card-number">↗</div>
+            <p>Daily, Weekly & Yearly details</p>
+        </button>
+        <button class="card report-feature-card" type="button" onclick="openAdminReportFeature('counterClose')">
+            <div class="card-title">Counter Close</div>
+            <div class="card-number">₹</div>
+            <p>View staff Cash • UPI • Card • Reconciliation</p>
+        </button>
+    </div>
+
+    <div id="salesRevenueFeature" class="report-feature-panel" style="display:none">
+        <div class="panel period-report-toolbar">
+            <div>
+                <h2>Sales & Revenue Reports</h2>
+                <p class="small-note">Generate Daily, Weekly or Yearly reports without leaving this page.</p>
+            </div>
+            <div class="period-report-controls">
+                <div class="form-field">
+                    <label>Report Period</label>
+                    <select id="adminReportPeriod">
+                        <option value="DAILY">Daily</option>
+                        <option value="WEEKLY">Weekly</option>
+                        <option value="YEARLY">Yearly</option>
+                    </select>
+                </div>
+                <button class="primary" type="button" onclick="generateAdminPeriodReport()">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="panel generated-report-panel" id="generatedReportPanel">
+            <div class="generated-report-head">
+                <div>
+                    <h2 id="generatedReportTitle">Daily Report</h2>
+                    <p class="small-note" id="generatedReportRange">Select a period and click Generate Report.</p>
+                </div>
+                <div class="report-export-buttons">
+                    <button class="secondary" type="button" onclick="exportGeneratedReportExcel()">Excel</button>
+                    <button class="secondary" type="button" onclick="exportGeneratedReportPDF()">PDF</button>
+                    <button class="primary" type="button" onclick="printGeneratedReport()">Print</button>
+                </div>
+            </div>
+            <div id="generatedReportContent">
+                <p class="muted">Your generated report will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="counterCloseFeature" class="report-feature-panel" style="display:none">
+        <div class="panel admin-counter-panel">
+            <div class="generated-report-head">
+                <div>
+                    <h2>Counter Close</h2>
+                    <p class="small-note">Admin can view every staff counter closing, compare System vs Actual Cash, UPI and Card, and check MATCHED / MISMATCH status. Staff are the only users who enter actual counter values.</p>
+                </div>
+                <div class="report-export-buttons">
+                    <button class="secondary" type="button" onclick="loadAdminCounterClosures()">Refresh</button>
+                </div>
+            </div>
+            <div id="adminCounterCloseContent"><p class="muted">Loading counter closing details...</p></div>
+        </div>
+    </div>
+
+</div>
+
+<div id="staffReports" class="report-role-panel" style="display:none">
+    <div class="panel staff-report-toolbar">
+        <div><h2>My Staff Report</h2><p class="small-note">Your payments, daily collection and counter closing are shown only for your staff account.</p></div>
+        <div class="inline-form"><div class="form-field"><label>Report Date</label><input type="date" id="staffReportDate"></div><button class="primary" type="button" onclick="loadStaffReport()">View Date</button><button class="secondary" id="counterActionButton" type="button" onclick="showStaffReportCard('counter')">Counter Closing</button></div>
+    </div>
+    <div class="cards report-cards staff-report-cards">
+        <button class="card report-card" onclick="showStaffReportCard('profile')"><div class="card-title">Staff Details</div><div class="card-number" id="myStaffName">-</div><p>My Account</p></button>
+        <button class="card report-card" onclick="showStaffReportCard('payments')"><div class="card-title">My Payments</div><div class="card-number" id="myPaymentCount">0</div><p>Payments on selected date</p></button>
+        <button class="card report-card" onclick="showStaffReportCard('cash')"><div class="card-title">Cash</div><div class="card-number" id="myCashTotal">₹0.00</div><p>Daily Cash Collection</p></button>
+        <button class="card report-card" onclick="showStaffReportCard('upi')"><div class="card-title">UPI</div><div class="card-number" id="myUpiTotal">₹0.00</div><p>Daily UPI Collection</p></button>
+        <button class="card report-card" onclick="showStaffReportCard('card')"><div class="card-title">Card</div><div class="card-number" id="myCardTotal">₹0.00</div><p>Daily Card Collection</p></button>
+        <button class="card report-card" onclick="showStaffReportCard('counter')"><div class="card-title">Counter Closing</div><div class="card-number" id="myCounterStatus">OPEN</div><p>Cash + UPI + Card</p></button>
+    </div>
+    <div class="panel report-detail-panel" id="staffReportDetailPanel" style="display:none"><h2 id="staffReportDetailTitle">Staff Report Details</h2><div id="staffReportDetailContent"><p class="muted">Select a card to view details.</p></div></div>
+</div>
+</section>
+
+<!-- CMD STEP 16: Staff creation form and staff list -->
+<section id="staff" class="dashboard-section"><h1>Staff Management</h1><p class="welcome">Admin can add staff and view all staff activity</p><div class="panel"><h2>Add Staff</h2><form id="staffForm" class="grid-form"><div class="form-field"><label>Username</label><input id="staffUsername" required placeholder="Username"></div><div class="form-field"><label>Email</label><input id="staffEmail" required type="email" placeholder="Email"></div><div class="form-field"><label>Password</label><input id="staffPassword" required type="password" placeholder="Password"></div><button class="primary">Add Staff</button></form></div><div class="panel"><h2>Staff List</h2><div class="table-wrap"><table><thead><tr><th>Staff ID</th><th>Username</th><th>Email</th><th>Created At</th></tr></thead><tbody id="staffTable"></tbody></table></div></div></section>
+
+<!-- CMD STEP 17: Store/account settings form -->
+<section id="settings" class="dashboard-section"><h1>Settings</h1><p class="welcome">Manage store and account settings</p><div class="panel"><form id="settingsForm" class="grid-form"><div class="form-field"><label>Store Name</label><input id="storeName" placeholder="Store Name"></div><div class="form-field"><label>Phone</label><input id="settingsPhone" placeholder="Phone"></div><div class="form-field"><label>Email</label><input id="settingsEmail" type="email" placeholder="Email"></div><div class="form-field"><label>Address</label><input id="settingsAddress" placeholder="Address"></div><div class="form-field"><label>User ID</label><input id="accountUserId" readonly></div><div class="form-field"><label>User Name</label><input id="accountUserName" readonly></div><button class="primary">Save Settings</button></form></div></section>
+
+</main>
+</div>
+<!-- CMD STEP 18: Load dashboard JavaScript after the HTML elements exist -->
+<script src="js/local-storage.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
